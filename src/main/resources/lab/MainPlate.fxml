@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.paint.*?>
+<?import javafx.scene.shape.*?>
+<?import javafx.scene.text.*?>
+
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="lab.MainController">
+   <bottom>
+      <Pane BorderPane.alignment="CENTER">
+         <children>
+            <Region prefHeight="70.0" prefWidth="600.0" style="-fx-border-color: black; -fx-background-color: grey;" />
+            <Button fx:id="Start" layoutX="36.0" layoutY="23.0" mnemonicParsing="false" onAction="#Start" text="Start" />
+            <Button fx:id="Stop" layoutX="94.0" layoutY="22.0" mnemonicParsing="false" onAction="#Stop" text="Stop" />
+            <Button fx:id="Shoot" layoutX="276.0" layoutY="22.0" mnemonicParsing="false" onAction="#Shoot" text="Shoot" />
+            <Button fx:id="Pause" layoutX="152.0" layoutY="22.0" mnemonicParsing="false" onAction="#Pause" text="Pause" />
+         </children>
+      </Pane>
+   </bottom>
+   <left>
+      <Pane BorderPane.alignment="CENTER">
+         <children>
+            <Region prefHeight="330.0" prefWidth="70.0" style="-fx-background-color: yellow; -fx-border-color: black;" />
+            <Polygon fx:id="tri" fill="DODGERBLUE" layoutX="35.0" layoutY="164.0" points="0.0, 30.599990844726562, 17.79998779296875, 0.1999969482421875, 0.0, -30.199996948242188" stroke="BLACK" strokeType="INSIDE" />
+         </children>
+      </Pane>
+   </left>
+   <right>
+      <Pane BorderPane.alignment="CENTER">
+         <children>
+            <Region layoutY="-1.0" prefHeight="330.0" prefWidth="100.0" style="-fx-border-color: black;" />
+            <Label layoutX="30.0" layoutY="43.0" text="Score:">
+               <font>
+                  <Font name="System Bold" size="14.0" />
+               </font>
+            </Label>
+            <Label fx:id="Score" layoutX="33.0" layoutY="73.0" text="0" />
+            <Label layoutX="30.0" layoutY="102.0" text="Shoots:">
+               <font>
+                  <Font name="System Bold" size="14.0" />
+               </font>
+            </Label>
+            <Label fx:id="Shoots" layoutX="33.0" layoutY="131.0" text="0" />
+         </children>
+      </Pane>
+   </right>
+   <center>
+      <Pane fx:id="plate" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+         <children>
+            <Line fx:id="line2" endX="27.399993896484375" endY="244.79998779296875" layoutX="335.0" layoutY="84.0" startX="27.399993896484375" startY="-84.0" />
+            <Line fx:id="line1" endX="27.399993896484375" endY="244.79998779296875" layoutX="254.0" layoutY="84.0" startX="27.399993896484375" startY="-84.0" />
+            <Circle fx:id="target1" layoutX="281.0" layoutY="164.0" radius="24.0" stroke="#00f501" strokeType="INSIDE" strokeWidth="2.0">
+               <fill>
+                  <RadialGradient centerX="0.5" centerY="0.5" radius="0.5">
+                     <stops>
+                        <Stop>
+                           <color>
+                              <Color red="1.0" green="0.11999999731779099" blue="0.11999999731779099" />
+                           </color>
+                        </Stop>
+                        <Stop offset="1.0">
+                           <color>
+                              <Color red="1.0" green="1.0" blue="1.0" />
+                           </color>
+                        </Stop>
+                     </stops>
+                  </RadialGradient>
+               </fill>
+            </Circle>
+            <Circle fx:id="target2" layoutX="363.0" layoutY="164.0" radius="12.0" stroke="#00f501" strokeType="INSIDE" strokeWidth="2.0">
+               <fill>
+                  <RadialGradient centerX="0.5" centerY="0.5" radius="0.5">
+                     <stops>
+                        <Stop>
+                           <color>
+                              <Color red="1.0" green="0.11999999731779099" blue="0.11999999731779099" />
+                           </color>
+                        </Stop>
+                        <Stop offset="1.0">
+                           <color>
+                              <Color red="1.0" green="1.0" blue="1.0" />
+                           </color>
+                        </Stop>
+                     </stops>
+                  </RadialGradient>
+               </fill>
+            </Circle>
+         </children>
+      </Pane>
+   </center>
+</BorderPane>
