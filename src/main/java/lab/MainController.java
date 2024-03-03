@@ -9,14 +9,6 @@ import javafx.scene.shape.*;
 
 
 public class MainController {
-    int score_val = 0;
-    int shoots_val = 0;
-
-    int tg1p = 2;
-    int tg2p = -1;
-
-    boolean flag = false;
-
     @FXML
     private Label Score;
 
@@ -41,10 +33,24 @@ public class MainController {
 
     Circle S_blue;
 
+    int score_val = 0;
+    int shoots_val = 0;
+
+    int tg1p = 2;
+    int tg2p = -1;
+
+    boolean flag = false;
+
     Thread st = new Thread(
             () -> {
-                while (true) {
-                    if(flag) {
+                try {
+                    while (true) {
+                        //System.out.println("Hello world!");
+                        if(!flag) {
+                            synchronized (this) {
+                                this.wait();
+                            }
+                        }
                         Platform.runLater(() -> {
                             if (target1.getLayoutY() <= (0 + target1.getRadius())) {
                                 tg1p = 1;
@@ -86,60 +92,61 @@ public class MainController {
                             target2.setLayoutY(target2.getLayoutY() + 4 * tg2p);
 
                         });
-                    }
-                    try {
                         Thread.sleep(25);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
                     }
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
                 }
             }
     );
 
     @FXML
     protected void Start() {
-        if (tg1p == 2) {
-            tg1p = 1;
-            st.start();
-        }
-
         if (!flag) {
-            flag = true;
-            S_blue = null;
-            Score.setText(Integer.toString(score_val));
-            Shoots.setText(Integer.toString(shoots_val));
+            synchronized (this) {
+                flag = true;
+                S_blue = null;
+                Score.setText(Integer.toString(score_val));
+                Shoots.setText(Integer.toString(shoots_val));
+                if (tg1p == 2) {
+                    tg1p = 1;
+                    st.start();
+                } else {
+                    notifyAll();
+                }
+            }
         }
     }
 
     @FXML
     protected void Stop() {
         if(flag) {
+            flag = false;
             if (S_blue != null) {
                 plate.getChildren().remove(S_blue);
                 S_blue = null;
             }
-            flag = false;
             score_val = 0;
             shoots_val = 0;
             tg1p = 1;
             tg2p = -1;
             Score.setText(Integer.toString(score_val));
             Shoots.setText(Integer.toString(shoots_val));
-            target1.setLayoutX(line1.getLayoutX()+line1.getStartX());
+            target1.setLayoutX(line1.getLayoutX() + line1.getStartX());
             target1.setLayoutY(tri.getLayoutY());
-            target2.setLayoutX(line2.getLayoutX()+line2.getStartX());
+            target2.setLayoutX(line2.getLayoutX() + line2.getStartX());
             target2.setLayoutY(tri.getLayoutY());
         }
     }
 
     @FXML
-    protected void Pause() {
+    protected synchronized void Pause() {
         if(flag) {
+            flag = false;
             if (S_blue != null) {
                 plate.getChildren().remove(S_blue);
                 S_blue = null;
             }
-            flag = false;
         }
     }
 
