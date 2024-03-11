@@ -9,9 +9,8 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 
-public class MainController {
-    int My_id = 0;
-
+public class ClientController {
+    int My_id = 1;
     @FXML
     Pane P;
     @FXML
