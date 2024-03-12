@@ -9,8 +9,20 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 
+import java.io.*;
+import java.net.InetAddress;
+import java.net.Socket;
+
 public class ClientController {
+    int port = 3124;
+    InetAddress ip = null;
     int My_id = 1;
+    int P_n = 1;
+
+    Socket cs;
+    DataInputStream dis;
+    DataOutputStream dos;
+
     @FXML
     Pane P;
     @FXML
@@ -72,7 +84,8 @@ public class ClientController {
     @FXML
     Circle target2;
 
-    Circle S_blue;
+    //Circle S_blue;
+    Circle[] cirs = new Circle[4];
 
     MyPair[] Sc_sh = new MyPair[4];
     //int score_val = 0;
@@ -83,31 +96,18 @@ public class ClientController {
 
     boolean flag = false;
 
-    Circle Move_and_target(Circle cir, int id) {
+    Circle Move(Circle cir, int id) {
         if (cir != null) {
             cir.setLayoutX(cir.getLayoutX() + 7);
+        }
 
-            if ((cir.getLayoutX() > (target1.getLayoutX() - target1.getRadius())) &
-                    (cir.getLayoutX() < (target1.getLayoutX() + target1.getRadius())) &
-                    (cir.getLayoutY() > (target1.getLayoutY() - target1.getRadius())) &
-                    (cir.getLayoutY() < (target1.getLayoutY() + target1.getRadius()))) {
-                plate.getChildren().remove(cir);
-                Sc_sh[id].sc += 1;
-                scores[id].setText(Integer.toString(Sc_sh[id].sc));
-                cir = null;
-            } else if ((cir.getLayoutX() > (target2.getLayoutX() - target2.getRadius())) &
-                    (cir.getLayoutX() < (target2.getLayoutX() + target2.getRadius())) &
-                    (cir.getLayoutY() > (target2.getLayoutY() - target2.getRadius())) &
-                    (cir.getLayoutY() < (target2.getLayoutY() + target2.getRadius()))) {
-                plate.getChildren().remove(cir);
-                Sc_sh[id].sc += 2;
-                scores[id].setText(Integer.toString(Sc_sh[id].sc));
-                cir = null;
-            } else if ((cir.getLayoutX() >= (400 - 0.7 * target2.getRadius()))) {
-                plate.getChildren().remove(cir);
-                cir = null;
-            }
-        } else if (Sc_sh[id].sc == 3) {
+        return cir;
+    }
+
+    Circle upd_remove(Circle cir, int id) {
+        plate.getChildren().remove(cir);
+        cir = null;
+        if (Sc_sh[id].sc == 3) {
             Stop();
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle(null);
@@ -122,9 +122,44 @@ public class ClientController {
             alert.setContentText(names[id].getText() + " LOSE!!!");
             alert.showAndWait();
         }
-
         return cir;
     }
+
+    void cirs_create(int id) {
+        cirs[id] = new Circle();
+        cirs[id].setStroke(tris[id].getFill());
+        cirs[id].setLayoutX(tris[id].getLayoutX());
+        cirs[id].setLayoutY(tris[id].getLayoutY());
+        cirs[id].setRadius(5);
+        plate.getChildren().add(cirs[id]);
+    }
+
+    Thread read_sc = new Thread(//!!sc
+            () -> {
+                try {
+                    while(true) {
+                        String tm_sc = dis.readUTF();
+                        int sc_id = Integer.parseInt(tm_sc.substring(0, 1));
+                        int ch_sc = Integer.parseInt(tm_sc.substring(1, 2));
+                        if(ch_sc == 3) {
+                            Sc_sh[sc_id].sh += 1;
+                            Platform.runLater(() -> {
+                                shootss[sc_id].setText(Integer.toString(Sc_sh[sc_id].sh));
+                                cirs_create(sc_id);//!!cir
+                            });
+                        } else {
+                            Sc_sh[sc_id].sc += ch_sc;
+                            Platform.runLater(() -> {
+                                scores[sc_id].setText(Integer.toString(Sc_sh[sc_id].sc));
+                                cirs[sc_id] = upd_remove(cirs[sc_id], sc_id);//!!cir
+                            });
+                        }
+                    }
+                } catch (IOException ex) {
+                    System.out.println("Error");
+                }
+            }
+    );
 
     Thread st = new Thread(
             () -> {
@@ -148,7 +183,9 @@ public class ClientController {
                                 tg2p = -1;
                             }
 
-                            S_blue = Move_and_target(S_blue, My_id);
+                            for (int id = 0; id < P_n; id++) {
+                                cirs[id] = Move(cirs[id], id);
+                            }
 
                             target1.setLayoutY(target1.getLayoutY() + 2 * tg1p);
                             target2.setLayoutY(target2.getLayoutY() + 4 * tg2p);
@@ -167,7 +204,6 @@ public class ClientController {
         if (!flag) {
             synchronized (this) {
                 flag = true;
-                S_blue = null;
                 if (tg1p == 2) {
                     panes = new Pane[] {P, P1, P2, P3};
                     names = new Label[] {Name, Name1, Name2, Name3};
@@ -175,19 +211,47 @@ public class ClientController {
                     shootss = new Label[] {Shoots, Shoots1, Shoots2, Shoots3};
                     tris = new Polygon[] {tri, tri1, tri2, tri3};
 
-                    for (int id = 0; id <= My_id; id++) {
+                    try {
+                        ip = InetAddress.getLocalHost();
+                        cs = new Socket(ip, port);
+                        System.out.append("Client start \n");
+
+                        dis = new DataInputStream(cs.getInputStream());
+                        dos = new DataOutputStream(cs.getOutputStream());
+                        P_n = Integer.parseInt(dis.readUTF());
+                        My_id = P_n-1;
+                        String s = dis.readUTF();
+                        names[0].setText(s);//!!!
+
+                        System.out.println("Host name: " + s);
+
+                        TextInputDialog td = new TextInputDialog("****");
+                        td.setHeaderText("Enter your name");
+                        td.showAndWait();
+                        String name_str = td.getEditor().getText();
+                        names[My_id].setText((name_str.length() < 4 & !(name_str.equals(names[0].getText()))) ? name_str : "P1");//!!!!
+                        dos.writeUTF(names[My_id].getText());
+
+                        for (int id = 0; id < P_n; id++) {
+                            cirs[id] = null;
+                        }
+
+                        read_sc.start();
+
+                    } catch (IOException ex) {
+                        System.out.println("Error");
+                    }
+
+                    for (int id = 0; id < P_n; id++) {
                         panes[id].setVisible(true);
                         tris[id].setVisible(true);
                     }
                     tg1p = 1;
+
                     for (int id = 0; id < 4; id++) {
                         Sc_sh[id] = new MyPair();
                     }
-                    TextInputDialog td = new TextInputDialog("****");
-                    td.setHeaderText("Enter your name");
-                    td.showAndWait();
-                    String name_str = td.getEditor().getText();
-                    names[My_id].setText(name_str.length() < 4 ? name_str : name_str.substring(0, 4));
+
                     st.start();
                 } else {
                     notifyAll();
@@ -200,22 +264,22 @@ public class ClientController {
     protected void Stop() {
         if(flag) {
             flag = false;
-            if (S_blue != null) {
-                plate.getChildren().remove(S_blue);
-                S_blue = null;
-            }
-            for (int id_i = 0; id_i < Sc_sh.length; id_i++) {
+            for (int id_i = 0; id_i < P_n; id_i++) {
+                if (cirs[id_i] != null) {
+                    plate.getChildren().remove(cirs[id_i]);
+                    cirs[id_i] = null;
+                }
                 Sc_sh[id_i].sc = 0;
                 Sc_sh[id_i].sh = 0;
+                scores[id_i].setText(Integer.toString(Sc_sh[id_i].sc));
+                shootss[id_i].setText(Integer.toString(Sc_sh[id_i].sh));
             }
             tg1p = 1;
             tg2p = -1;
-            scores[My_id].setText(Integer.toString(Sc_sh[My_id].sc));
-            shootss[My_id].setText(Integer.toString(Sc_sh[My_id].sh));
             target1.setLayoutX(line1.getLayoutX() + line1.getStartX());
-            target1.setLayoutY(tris[My_id].getLayoutY());
+            target1.setLayoutY(tris[0].getLayoutY());
             target2.setLayoutX(line2.getLayoutX() + line2.getStartX());
-            target2.setLayoutY(tris[My_id].getLayoutY());
+            target2.setLayoutY(tris[0].getLayoutY());
         }
     }
 
@@ -223,9 +287,11 @@ public class ClientController {
     protected synchronized void Pause() {
         if(flag) {
             flag = false;
-            if (S_blue != null) {
-                plate.getChildren().remove(S_blue);
-                S_blue = null;
+            for (int id_i = 0; id_i < P_n; id_i++) {
+                if (cirs[id_i] != null) {
+                    plate.getChildren().remove(cirs[id_i]);
+                    cirs[id_i] = null;
+                }
             }
         }
     }
@@ -233,15 +299,16 @@ public class ClientController {
     @FXML
     protected void Shoot() {
         //System.out.println(S_blue);
-        if (flag & S_blue == null) {
-            S_blue = new Circle();
-            S_blue.setStroke(tris[My_id].getFill());
-            S_blue.setLayoutX(tris[My_id].getLayoutX());
-            S_blue.setLayoutY(tris[My_id].getLayoutY());
-            S_blue.setRadius(5);
-            plate.getChildren().add(S_blue);
+        if (flag & cirs[My_id] == null) {
             Sc_sh[My_id].sh += 1;
             shootss[My_id].setText(Integer.toString(Sc_sh[My_id].sh));
+            cirs_create(My_id);
+            try {//!!
+                dos.writeUTF(Integer.toString(My_id));
+            } catch (IOException ex) {
+                System.out.println("Error");
+            }
+
         }
     }
 }
