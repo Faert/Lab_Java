@@ -11,10 +11,11 @@
         <Pane BorderPane.alignment="CENTER">
             <children>
                 <Region prefHeight="70.0" prefWidth="600.0" style="-fx-border-color: black; -fx-background-color: grey;" />
-                <Button fx:id="Start" layoutX="36.0" layoutY="23.0" mnemonicParsing="false" onAction="#Start" text="Start" />
-                <Button fx:id="Stop" layoutX="94.0" layoutY="22.0" mnemonicParsing="false" onAction="#Stop" text="Stop" />
-                <Button fx:id="Shoot" layoutX="276.0" layoutY="22.0" mnemonicParsing="false" onAction="#Shoot" text="Shoot" />
-                <Button fx:id="Pause" layoutX="152.0" layoutY="22.0" mnemonicParsing="false" onAction="#Pause" text="Pause" />
+                <Button fx:id="Start" layoutX="36.0" layoutY="22.0" mnemonicParsing="false" onAction="#Start" text="Start" />
+                <Button fx:id="Stop" layoutX="279.0" layoutY="22.0" mnemonicParsing="false" onAction="#Stop" text="Stop" />
+                <Button fx:id="Shoot" layoutX="370.0" layoutY="22.0" mnemonicParsing="false" onAction="#Shoot" text="Shoot" />
+                <Button fx:id="Pause" layoutX="218.0" layoutY="22.0" mnemonicParsing="false" onAction="#Pause" text="Pause" />
+                <Button fx:id="Ready" layoutX="89.0" layoutY="22.0" mnemonicParsing="false" onAction="#Ready" text="Ready" />
             </children>
         </Pane>
     </bottom>

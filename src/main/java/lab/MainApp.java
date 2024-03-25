@@ -14,7 +14,7 @@ public class MainApp extends Application {
     public void start(Stage stage) throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader(MainApp.class.getResource("MainPlate.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 600, 400);
-        stage.setTitle("IvlevLab");
+        stage.setTitle("IvlevLabHost");
         stage.setScene(scene);
         stage.setOnCloseRequest(e -> System.exit(0));
         stage.show();

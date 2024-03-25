@@ -11,10 +11,11 @@
       <Pane BorderPane.alignment="CENTER">
          <children>
             <Region prefHeight="70.0" prefWidth="600.0" style="-fx-border-color: black; -fx-background-color: grey;" />
-            <Button fx:id="Start" layoutX="36.0" layoutY="23.0" mnemonicParsing="false" onAction="#Start" text="Start" />
-            <Button fx:id="Stop" layoutX="94.0" layoutY="22.0" mnemonicParsing="false" onAction="#Stop" text="Stop" />
-            <Button fx:id="Shoot" layoutX="276.0" layoutY="22.0" mnemonicParsing="false" onAction="#Shoot" text="Shoot" />
-            <Button fx:id="Pause" layoutX="152.0" layoutY="22.0" mnemonicParsing="false" onAction="#Pause" text="Pause" />
+            <Button fx:id="Start" layoutX="36.0" layoutY="22.0" mnemonicParsing="false" onAction="#Start" text="Start" />
+            <Button fx:id="Stop" layoutX="279.0" layoutY="22.0" mnemonicParsing="false" onAction="#Stop" text="Stop" />
+            <Button fx:id="Shoot" layoutX="370.0" layoutY="22.0" mnemonicParsing="false" onAction="#Shoot" text="Shoot" />
+            <Button fx:id="Pause" layoutX="218.0" layoutY="22.0" mnemonicParsing="false" onAction="#Pause" text="Pause" />
+            <Button fx:id="Ready" layoutX="89.0" layoutY="22.0" mnemonicParsing="false" onAction="#Ready" text="Ready" />
          </children>
       </Pane>
    </bottom>
@@ -22,10 +23,10 @@
       <Pane BorderPane.alignment="CENTER">
          <children>
             <Region prefHeight="330.0" prefWidth="70.0" style="-fx-background-color: yellow; -fx-border-color: black;" />
-            <Polygon fx:id="tri" fill="DODGERBLUE" layoutX="35.0" layoutY="66.0" points="0.0, 30.599990844726562, 17.79998779296875, 0.1999969482421875, 0.0, -30.199996948242188" stroke="BLACK" strokeType="INSIDE" visible="false"/>
-            <Polygon fx:id="tri1" fill="#ff1f1f" layoutX="35.0" layoutY="132.0" points="0.0, 30.599990844726562, 17.79998779296875, 0.1999969482421875, 0.0, -30.199996948242188" stroke="BLACK" strokeType="INSIDE" visible="false"/>
-            <Polygon fx:id="tri2" fill="#1fff29" layoutX="35.0" layoutY="198.0" points="0.0, 30.599990844726562, 17.79998779296875, 0.1999969482421875, 0.0, -30.199996948242188" stroke="BLACK" strokeType="INSIDE" visible="false"/>
-            <Polygon fx:id="tri3" fill="#b81fff" layoutX="35.0" layoutY="264.0" points="0.0, 30.599990844726562, 17.79998779296875, 0.1999969482421875, 0.0, -30.199996948242188" stroke="BLACK" strokeType="INSIDE" visible="false"/>
+            <Polygon fx:id="tri" fill="DODGERBLUE" layoutX="35.0" layoutY="66.0" points="0.0, 30.599990844726562, 17.79998779296875, 0.1999969482421875, 0.0, -30.199996948242188" stroke="BLACK" strokeType="INSIDE" />
+            <Polygon fx:id="tri1" fill="#ff1f1f" layoutX="35.0" layoutY="132.0" points="0.0, 30.599990844726562, 17.79998779296875, 0.1999969482421875, 0.0, -30.199996948242188" stroke="BLACK" strokeType="INSIDE" visible="false" />
+            <Polygon fx:id="tri2" fill="#1fff29" layoutX="35.0" layoutY="198.0" points="0.0, 30.599990844726562, 17.79998779296875, 0.1999969482421875, 0.0, -30.199996948242188" stroke="BLACK" strokeType="INSIDE" visible="false" />
+            <Polygon fx:id="tri3" fill="#b81fff" layoutX="35.0" layoutY="264.0" points="0.0, 30.599990844726562, 17.79998779296875, 0.1999969482421875, 0.0, -30.199996948242188" stroke="BLACK" strokeType="INSIDE" visible="false" />
          </children>
       </Pane>
    </left>
@@ -33,7 +34,7 @@
       <Pane BorderPane.alignment="CENTER">
          <children>
             <Pane prefHeight="330.0" prefWidth="100.0" style="-fx-border-color: black;" />
-                  <Pane fx:id="P" prefHeight="330.0" prefWidth="100.0" visible="false">
+                  <Pane fx:id="P" prefHeight="330.0" prefWidth="100.0">
                         <children>
                              <Label layoutX="14.0" layoutY="15.0" text="Name:">
                                 <font>

@@ -6,7 +6,6 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.Pane;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 
 import java.io.*;
@@ -21,10 +20,12 @@ public class MainController {
 
     int P_n = 1;
 
+    int P_act = 1;
+
+    int ready = 0;
+
     ServerSocket ss;
-    Socket cs;
-    DataInputStream dis;
-    DataOutputStream dos;
+
 
     @FXML
     Pane P;
@@ -91,46 +92,146 @@ public class MainController {
     Circle[] cirs = new Circle[4];
 
     MyPair[] Sc_sh = new MyPair[4];
-    //int score_val = 0;
-    //int shoots_val = 0;
 
     int tg1p = 2;
     int tg2p = -1;
 
     boolean flag = false;
+    boolean flag_r = false;
+
+    Server_Client[] S_c = new Server_Client[4];
+    Socket soc = null;
+
+    class Server_Client extends Thread {
+        Socket cs;
+        DataInputStream dis;
+        DataOutputStream dos;
+
+        int id = -1;
+
+        public Server_Client(Socket socket, int id_) throws IOException {
+            cs = socket;
+            dis = new DataInputStream(socket.getInputStream());
+            dos = new DataOutputStream(socket.getOutputStream());
+            id = id_;
+            start();
+        }
+
+        @Override
+        public void run() {
+            try {
+                while(true) {
+                    String msg = dis.readUTF();
+                    System.out.println(msg);
+                    if (!names[id].getText().equals("None")) {
+                        switch (msg) {
+                            case "sh": {
+                                Sc_sh[id].sh += 1;
+                                Platform.runLater(() -> {
+                                    shootss[id].setText(Integer.toString(Sc_sh[id].sh));
+                                    cirs_create(id);
+                                });
+                                for (int id_i = 1; id_i<P_n; id_i++) {
+                                    if(id_i != id) {
+                                        S_c[id_i].send(id + Integer.toString(3));
+                                    }
+                                }
+                                break;
+                            }
+                            case "re": {
+                                ready += 1;
+                                Platform.runLater(() -> {
+                                    names[id].setUnderline(true);
+                                });
+                                break;
+                            }
+                            case  "st": {
+                                Stop();
+                                break;
+                            }
+                            case "pa": {
+                                Pause();
+                                break;
+                            }
+                        }
+                    } else {
+                        Platform.runLater(() -> {
+                            names[id].setText(msg);
+                        });
+                    }
+                }
+            } catch (IOException ex) {
+                System.out.println("Lost connect with " + Integer.toString(id));
+                    Platform.runLater(() -> {
+                        if (id != -1) {
+                            panes[id].setVisible(false);
+                            tris[id].setVisible(false);
+                            if (cirs[id] != null) {
+                                plate.getChildren().remove(cirs[id]);
+                                cirs[id] = null;
+                            }
+                            Sc_sh[id].sc = 0;
+                            Sc_sh[id].sh = 0;
+                            scores[id].setText(Integer.toString(Sc_sh[id].sc));
+                            shootss[id].setText(Integer.toString(Sc_sh[id].sh));
+                        }
+                    });
+                id = -1;
+                P_act -= 1;
+                //cs.close();
+            }
+        }
+
+        private void send(String st) {
+            if(id != -1) {
+                try {
+                    dos.writeUTF(st);
+                } catch (IOException ex) {
+                    System.out.println("Lost connect with " + Integer.toString(id));
+                }
+            }
+        }
+
+    }
 
     Circle Move_and_target(Circle cir, int id) {
         if (cir != null) {
             cir.setLayoutX(cir.getLayoutX() + 7);
-            try {
-                if ((cir.getLayoutX() > (target1.getLayoutX() - target1.getRadius())) &
-                        (cir.getLayoutX() < (target1.getLayoutX() + target1.getRadius())) &
-                        (cir.getLayoutY() > (target1.getLayoutY() - target1.getRadius())) &
-                        (cir.getLayoutY() < (target1.getLayoutY() + target1.getRadius()))) {
-                    plate.getChildren().remove(cir);
-                    Sc_sh[id].sc += 1;
-                    scores[id].setText(Integer.toString(Sc_sh[id].sc));
-                    cir = null;
-                    //System.out.println(Integer.toString(id) + Integer.toString(1));
-                    dos.writeUTF(Integer.toString(id) + Integer.toString(1));
-                } else if ((cir.getLayoutX() > (target2.getLayoutX() - target2.getRadius())) &
-                        (cir.getLayoutX() < (target2.getLayoutX() + target2.getRadius())) &
-                        (cir.getLayoutY() > (target2.getLayoutY() - target2.getRadius())) &
-                        (cir.getLayoutY() < (target2.getLayoutY() + target2.getRadius()))) {
-                    plate.getChildren().remove(cir);
-                    Sc_sh[id].sc += 2;
-                    scores[id].setText(Integer.toString(Sc_sh[id].sc));
-                    cir = null;
-                    dos.writeUTF(Integer.toString(id) + Integer.toString(2));
-                } else if ((cir.getLayoutX() >= (400 - 0.7 * target2.getRadius()))) {
-                    plate.getChildren().remove(cir);
-                    cir = null;
-                    dos.writeUTF(Integer.toString(id) + Integer.toString(0));
+            if (id != 0 && (S_c[id] == null || S_c[id].id == -1)) {
+                plate.getChildren().remove(cir);
+                cir = null;
+            } else if ((cir.getLayoutX() > (target1.getLayoutX() - target1.getRadius())) &&
+                    (cir.getLayoutX() < (target1.getLayoutX() + target1.getRadius())) &&
+                    (cir.getLayoutY() > (target1.getLayoutY() - target1.getRadius())) &&
+                    (cir.getLayoutY() < (target1.getLayoutY() + target1.getRadius()))) {
+                plate.getChildren().remove(cir);
+                Sc_sh[id].sc += 1;
+                scores[id].setText(Integer.toString(Sc_sh[id].sc));
+                cir = null;
+                //System.out.println(Integer.toString(id) + Integer.toString(1));
+                for (int id_i = 1; id_i < P_n; id_i++) {
+                    S_c[id_i].send(Integer.toString(id) + Integer.toString(1));
                 }
-            }  catch (IOException ex) {
-                System.out.println("Error");
+            } else if ((cir.getLayoutX() > (target2.getLayoutX() - target2.getRadius())) &&
+                    (cir.getLayoutX() < (target2.getLayoutX() + target2.getRadius())) &&
+                    (cir.getLayoutY() > (target2.getLayoutY() - target2.getRadius())) &&
+                    (cir.getLayoutY() < (target2.getLayoutY() + target2.getRadius()))) {
+                plate.getChildren().remove(cir);
+                Sc_sh[id].sc += 2;
+                scores[id].setText(Integer.toString(Sc_sh[id].sc));
+                cir = null;
+                for (int id_i = 1; id_i < P_n; id_i++) {
+                    S_c[id_i].send(Integer.toString(id) + Integer.toString(2));
+                }
+            } else if ((cir.getLayoutX() >= (400 - 0.7 * target2.getRadius()))) {
+                plate.getChildren().remove(cir);
+                cir = null;
+                for (int id_i = 1; id_i < P_n; id_i++) {
+                    S_c[id_i].send(Integer.toString(id) + Integer.toString(0));
+                }
             }
-        } else if (Sc_sh[id].sc == 3) {
+        } else if (Sc_sh[id].sc >= 3) {
+            //flag = false;
             Stop();
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle(null);
@@ -138,7 +239,9 @@ public class MainController {
             alert.setContentText(names[id].getText() + " WIN!!!");
             alert.showAndWait();
         } else if (Sc_sh[id].sh == 7) {
-            Stop();
+            //flag = false;
+            Sc_sh[id].sh = 10;
+            Pause();
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle(null);
             alert.setHeaderText(null);
@@ -157,45 +260,13 @@ public class MainController {
         cirs[id].setRadius(5);
         plate.getChildren().add(cirs[id]);
     }
-
-    Thread read_sh = new Thread(
-            () -> {
-                try {
-                    while(true) {
-                        int sh_id = Integer.parseInt(dis.readUTF());
-                        Sc_sh[sh_id].sh += 1;
-                        Platform.runLater(() -> {
-                            shootss[sh_id].setText(Integer.toString(Sc_sh[sh_id].sh));
-                            cirs_create(sh_id);
-                        });
-                    }
-                } catch (IOException ex) {
-                    System.out.println("Error");
-                }
-            }
-    );
-
-    /*Thread write_sc = new Thread(
-            () -> {
-                try {
-                    while(true) {
-                        int sh_id = Integer.parseInt(dis.readUTF());
-                        Sc_sh[sh_id].sh += 1;
-                        Platform.runLater(() -> {
-                            shootss[sh_id].setText(Integer.toString(Sc_sh[sh_id].sh));
-                        });
-                    }
-                } catch (IOException ex) {
-                    System.out.println("Error");
-                }
-            }
-    );*/
     Thread st = new Thread(
             () -> {
+                System.out.append("Server back start\n");
                 try {
                     while (true) {
-                        //System.out.println("Hello world!");
-                        if(!flag) {
+                        //System.out.println(flag);
+                        if(!flag) {// || ready < P_n
                             synchronized (this) {
                                 this.wait();
                             }
@@ -228,11 +299,65 @@ public class MainController {
             }
     );
 
+    Thread connect_s = new Thread(()->{
+        try {
+            ip = InetAddress.getLocalHost();
+            ss = new ServerSocket(port, 3, ip);
+            System.out.append("Server start\n");
+
+            while (ready < P_act & P_n < 4) {
+                try {
+                    soc = ss.accept();
+                    S_c[P_n] = new Server_Client(soc, P_n);
+                    System.out.println("Client connect (" + S_c[P_n].cs.getPort() + ")");
+                    S_c[P_n].send(Integer.toString(P_n));
+                    //S_c[P_n].send(names[My_id].getText());
+                    for (int id_i = 0; id_i < P_n; id_i++) {
+                        S_c[P_n].send(names[id_i].getText());
+                    }
+                    cirs[P_n] = null;
+                    panes[P_n].setVisible(true);
+                    tris[P_n].setVisible(true);
+                    P_n += 1;
+                    P_act += 1;
+                } catch (IOException ex) {
+                    System.out.println("End client connect");
+                    //soc.close();
+                }
+            }
+
+        } catch (Exception ex) {
+            System.out.println("End client connect");
+            //System.exit(0);
+        }
+
+        boolean temp_flag = true;
+        while(temp_flag) {
+            temp_flag = false;
+            for(int id_i = 1; id_i < P_n; id_i++) {
+                if(names[id_i].getText().equals("None")) {
+                    temp_flag = true;
+                    break;
+                }
+            }
+        }
+
+        for (int id = 1; id < P_n; id++) {
+            S_c[id].send(Integer.toString(P_n));
+            System.out.println(P_n);
+            for (int id_i = id+1; id_i < P_n; id_i++) {
+                S_c[id].send(names[id_i].getText());
+            }
+        }
+
+        //st.start();
+    }
+    );
+
     @FXML
     protected void Start() {
         if (!flag) {
             synchronized (this) {
-                flag = true;
                 if (tg1p == 2) {
                     panes = new Pane[] {P, P1, P2, P3};
                     names = new Label[] {Name, Name1, Name2, Name3};
@@ -244,51 +369,48 @@ public class MainController {
                     td.setHeaderText("Enter your name");
                     td.showAndWait();
                     String name_str = td.getEditor().getText();
-                    names[My_id].setText(name_str.length() < 4 ? name_str : name_str.substring(0, 4));
+                    names[My_id].setText(name_str.length() <= 4 ? name_str : name_str.substring(0, 4));
 
-                    try {
-                        ip = InetAddress.getLocalHost();
-                        ss = new ServerSocket(port, 0, ip);
-                        System.out.append("Server start\n");
 
-                        cs = ss.accept();//!!!4 and while flag
-                        System.out.println("Client connect (" + cs.getPort() + ")");
-                        P_n +=1;
-
-                        dis = new DataInputStream(cs.getInputStream());
-                        dos = new DataOutputStream(cs.getOutputStream());
-
-                        //String s = dis.readUTF();
-                        //System.out.println("Connect: " + s);
-
-                        dos.writeUTF(Integer.toString(P_n));
-                        dos.writeUTF(names[My_id].getText());//!!!
-                        names[1].setText(dis.readUTF());
-
-                        for (int id = 0; id < P_n; id++) {
-                            cirs[id] = null;
-                        }
-
-                        read_sh.start();
-
-                    } catch (IOException ex) {
-                        System.out.println("Error");
-                    }
-
-                    for (int id = 0; id < P_n; id++) {
-                        panes[id].setVisible(true);
-                        tris[id].setVisible(true);
-                    }
-                    tg1p = 1;
                     for (int id = 0; id < 4; id++) {
                         Sc_sh[id] = new MyPair();
                     }
 
-                    st.start();
-                } else {
+                    connect_s.start();
+
+                    tg1p = 1;
+                } else if (ready == P_act){
+                    try {
+                        ss.close();
+                        Thread.sleep(10);
+                    }  catch (Exception ex) {
+                        System.out.println("Start game");
+                        //System.exit(0);
+                    }
+
+                    flag = true;
+                    if(!st.isAlive()) {
+                        st.start();
+                    }
+                    System.out.println(st.getState());
                     notifyAll();
+                    System.out.println(st.getState());
+                    for (int id_i = 1; id_i < P_n; id_i++) {
+                        S_c[id_i].send("sta");
+                    }
                 }
             }
+        }
+    }
+
+    @FXML
+    protected void Ready() {
+        if(!flag && !flag_r) {
+            ready += 1;
+            flag_r = true;
+            Platform.runLater(() -> {
+                names[My_id].setUnderline(true);
+            });
         }
     }
 
@@ -296,22 +418,30 @@ public class MainController {
     protected void Stop() {
         if(flag) {
             flag = false;
-            for (int id_i = 0; id_i < P_n; id_i++) {
-                if (cirs[id_i] != null) {
-                    plate.getChildren().remove(cirs[id_i]);
-                    cirs[id_i] = null;
+            flag_r = false;
+            ready = 0;
+            Platform.runLater(() -> {
+                for (int id_i = 0; id_i < P_n; id_i++) {
+                    if (id_i > 0) {
+                        S_c[id_i].send("st");
+                    }
+                    if (cirs[id_i] != null) {
+                        plate.getChildren().remove(cirs[id_i]);
+                        cirs[id_i] = null;
+                    }
+                    names[id_i].setUnderline(false);
+                    Sc_sh[id_i].sc = 0;
+                    Sc_sh[id_i].sh = 0;
+                    scores[id_i].setText(Integer.toString(Sc_sh[id_i].sc));
+                    shootss[id_i].setText(Integer.toString(Sc_sh[id_i].sh));
                 }
-                Sc_sh[id_i].sc = 0;
-                Sc_sh[id_i].sh = 0;
-                scores[id_i].setText(Integer.toString(Sc_sh[id_i].sc));
-                shootss[id_i].setText(Integer.toString(Sc_sh[id_i].sh));
-            }
-            tg1p = 1;
-            tg2p = -1;
-            target1.setLayoutX(line1.getLayoutX() + line1.getStartX());
-            target1.setLayoutY(tris[0].getLayoutY());
-            target2.setLayoutX(line2.getLayoutX() + line2.getStartX());
-            target2.setLayoutY(tris[0].getLayoutY());
+                tg1p = 1;
+                tg2p = -1;
+                target1.setLayoutX(line1.getLayoutX() + line1.getStartX());
+                target1.setLayoutY(tris[0].getLayoutY());
+                target2.setLayoutX(line2.getLayoutX() + line2.getStartX());
+                target2.setLayoutY(tris[0].getLayoutY());
+            });
         }
     }
 
@@ -319,10 +449,13 @@ public class MainController {
     protected synchronized void Pause() {
         if(flag) {
             flag = false;
+            flag_r = false;
+            ready = 0;
+
             for (int id_i = 0; id_i < P_n; id_i++) {
-                if (cirs[id_i] != null) {
-                    plate.getChildren().remove(cirs[id_i]);
-                    cirs[id_i] = null;
+                names[id_i].setUnderline(false);
+                if (id_i > 0) {
+                    S_c[id_i].send("pa");
                 }
             }
         }
@@ -330,14 +463,13 @@ public class MainController {
     @FXML
     protected void Shoot() {
         //System.out.println(S_blue);
-        if (flag & cirs[My_id] == null) {
+        if (flag && cirs[My_id] == null && Sc_sh[My_id].sh < 7) {
             Sc_sh[My_id].sh += 1;
             shootss[My_id].setText(Integer.toString(Sc_sh[My_id].sh));
             cirs_create(My_id);
-            try {//!!
-                dos.writeUTF(Integer.toString(My_id) + Integer.toString(3));
-            } catch (IOException ex) {
-                System.out.println("Error");
+            for(int id = 1; id < P_n; id++)
+            {
+                S_c[id].send(Integer.toString(My_id) + Integer.toString(3));
             }
         }
     }
