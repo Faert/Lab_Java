@@ -3,6 +3,7 @@ package lab;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.Pane;
@@ -12,6 +13,10 @@ import java.io.*;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainController {
     int port = 3124;
@@ -88,10 +93,13 @@ public class MainController {
     @FXML
     Circle target2;
 
+    @FXML
+    Button DBout;
+
     //Circle S_blue;
     Circle[] cirs = new Circle[4];
 
-    MyPair[] Sc_sh = new MyPair[4];
+    //MyPair[] Sc_sh = new MyPair[4];
 
     int tg1p = 2;
     int tg2p = -1;
@@ -102,19 +110,33 @@ public class MainController {
     Server_Client[] S_c = new Server_Client[4];
     Socket soc = null;
 
+    ScoreDAO dao;
+
+
     class Server_Client extends Thread {
         Socket cs;
         DataInputStream dis;
         DataOutputStream dos;
 
+        Score data;
+
         int id = -1;
 
         public Server_Client(Socket socket, int id_) throws IOException {
-            cs = socket;
-            dis = new DataInputStream(socket.getInputStream());
-            dos = new DataOutputStream(socket.getOutputStream());
-            id = id_;
-            start();
+            if(id_ != 0) {
+                cs = socket;
+                dis = new DataInputStream(socket.getInputStream());
+                dos = new DataOutputStream(socket.getOutputStream());
+                id = id_;
+                data = new Score();
+                start();
+            } else {
+                cs = null;
+                dis = null;
+                dos = null;
+                id = 0;
+                data = new Score();
+            }
         }
 
         @Override
@@ -126,9 +148,11 @@ public class MainController {
                     if (!names[id].getText().equals("None")) {
                         switch (msg) {
                             case "sh": {
-                                Sc_sh[id].sh += 1;
+                                //Sc_sh[id].sh += 1;
+                                data.shoots += 1;
                                 Platform.runLater(() -> {
-                                    shootss[id].setText(Integer.toString(Sc_sh[id].sh));
+                                    //shootss[id].setText(Integer.toString(Sc_sh[id].sh));
+                                    shootss[id].setText(Integer.toString(data.shoots));
                                     cirs_create(id);
                                 });
                                 for (int id_i = 1; id_i<P_n; id_i++) {
@@ -157,6 +181,7 @@ public class MainController {
                     } else {
                         Platform.runLater(() -> {
                             names[id].setText(msg);
+                            data.Name = msg;
                         });
                     }
                 }
@@ -170,10 +195,14 @@ public class MainController {
                                 plate.getChildren().remove(cirs[id]);
                                 cirs[id] = null;
                             }
-                            Sc_sh[id].sc = 0;
-                            Sc_sh[id].sh = 0;
-                            scores[id].setText(Integer.toString(Sc_sh[id].sc));
-                            shootss[id].setText(Integer.toString(Sc_sh[id].sh));
+                            //Sc_sh[id].sc = 0;
+                            //Sc_sh[id].sh = 0;
+                            //scores[id].setText(Integer.toString(Sc_sh[id].sc));
+                            //shootss[id].setText(Integer.toString(Sc_sh[id].sh));
+                            data.score = 0;
+                            data.shoots = 0;
+                            scores[id].setText(Integer.toString(data.score));
+                            shootss[id].setText(Integer.toString(data.shoots));
                         }
                     });
                 id = -1;
@@ -205,10 +234,9 @@ public class MainController {
                     (cir.getLayoutY() > (target1.getLayoutY() - target1.getRadius())) &&
                     (cir.getLayoutY() < (target1.getLayoutY() + target1.getRadius()))) {
                 plate.getChildren().remove(cir);
-                Sc_sh[id].sc += 1;
-                scores[id].setText(Integer.toString(Sc_sh[id].sc));
+                S_c[id].data.score += 1;
+                scores[id].setText(Integer.toString(S_c[id].data.score));
                 cir = null;
-                //System.out.println(Integer.toString(id) + Integer.toString(1));
                 for (int id_i = 1; id_i < P_n; id_i++) {
                     S_c[id_i].send(Integer.toString(id) + Integer.toString(1));
                 }
@@ -217,8 +245,8 @@ public class MainController {
                     (cir.getLayoutY() > (target2.getLayoutY() - target2.getRadius())) &&
                     (cir.getLayoutY() < (target2.getLayoutY() + target2.getRadius()))) {
                 plate.getChildren().remove(cir);
-                Sc_sh[id].sc += 2;
-                scores[id].setText(Integer.toString(Sc_sh[id].sc));
+                S_c[id].data.score += 2;
+                scores[id].setText(Integer.toString(S_c[id].data.score));
                 cir = null;
                 for (int id_i = 1; id_i < P_n; id_i++) {
                     S_c[id_i].send(Integer.toString(id) + Integer.toString(2));
@@ -230,17 +258,15 @@ public class MainController {
                     S_c[id_i].send(Integer.toString(id) + Integer.toString(0));
                 }
             }
-        } else if (Sc_sh[id].sc >= 3) {
-            //flag = false;
+        } else if (S_c[id].data.score >= 3) {
             Stop();
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle(null);
             alert.setHeaderText(null);
             alert.setContentText(names[id].getText() + " WIN!!!");
             alert.showAndWait();
-        } else if (Sc_sh[id].sh == 7) {
-            //flag = false;
-            Sc_sh[id].sh = 10;
+        } else if (S_c[id].data.shoots == 7) {
+            S_c[id].data.shoots = 10;
             Pause();
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle(null);
@@ -265,7 +291,6 @@ public class MainController {
                 System.out.append("Server back start\n");
                 try {
                     while (true) {
-                        //System.out.println(flag);
                         if(!flag) {// || ready < P_n
                             synchronized (this) {
                                 this.wait();
@@ -303,6 +328,8 @@ public class MainController {
         try {
             ip = InetAddress.getLocalHost();
             ss = new ServerSocket(port, 3, ip);
+            S_c[0] = new Server_Client(null, 0);
+            S_c[0].data.Name = names[0].getText();
             System.out.append("Server start\n");
 
             while (ready < P_act & P_n < 4) {
@@ -311,7 +338,6 @@ public class MainController {
                     S_c[P_n] = new Server_Client(soc, P_n);
                     System.out.println("Client connect (" + S_c[P_n].cs.getPort() + ")");
                     S_c[P_n].send(Integer.toString(P_n));
-                    //S_c[P_n].send(names[My_id].getText());
                     for (int id_i = 0; id_i < P_n; id_i++) {
                         S_c[P_n].send(names[id_i].getText());
                     }
@@ -371,11 +397,12 @@ public class MainController {
                     String name_str = td.getEditor().getText();
                     names[My_id].setText(name_str.length() <= 4 ? name_str : name_str.substring(0, 4));
 
-
+                    dao = new ScoreDAO();
+/*
                     for (int id = 0; id < 4; id++) {
                         Sc_sh[id] = new MyPair();
                     }
-
+ */
                     connect_s.start();
 
                     tg1p = 1;
@@ -405,7 +432,7 @@ public class MainController {
 
     @FXML
     protected void Ready() {
-        if(!flag && !flag_r) {
+        if(!flag && !flag_r && S_c[0] != null) {
             ready += 1;
             flag_r = true;
             Platform.runLater(() -> {
@@ -420,6 +447,13 @@ public class MainController {
             flag = false;
             flag_r = false;
             ready = 0;
+            /*
+            Thread tmp_t = new Thread(
+                () -> {
+                    for (int id_i = 0; id_i < P_n; id_i++) {
+                        dao.Sc_addOrUpdate(S_c[id_i].data);
+                    }
+            }).start();*/
             Platform.runLater(() -> {
                 for (int id_i = 0; id_i < P_n; id_i++) {
                     if (id_i > 0) {
@@ -429,11 +463,12 @@ public class MainController {
                         plate.getChildren().remove(cirs[id_i]);
                         cirs[id_i] = null;
                     }
+                    dao.Sc_addOrUpdate(S_c[id_i].data);
                     names[id_i].setUnderline(false);
-                    Sc_sh[id_i].sc = 0;
-                    Sc_sh[id_i].sh = 0;
-                    scores[id_i].setText(Integer.toString(Sc_sh[id_i].sc));
-                    shootss[id_i].setText(Integer.toString(Sc_sh[id_i].sh));
+                    S_c[id_i].data.score = 0;
+                    S_c[id_i].data.shoots = 0;
+                    scores[id_i].setText(Integer.toString(S_c[id_i].data.score));
+                    shootss[id_i].setText(Integer.toString(S_c[id_i].data.shoots));
                 }
                 tg1p = 1;
                 tg2p = -1;
@@ -462,15 +497,22 @@ public class MainController {
     }
     @FXML
     protected void Shoot() {
-        //System.out.println(S_blue);
-        if (flag && cirs[My_id] == null && Sc_sh[My_id].sh < 7) {
-            Sc_sh[My_id].sh += 1;
-            shootss[My_id].setText(Integer.toString(Sc_sh[My_id].sh));
+        if (flag && cirs[My_id] == null && S_c[My_id].data.shoots < 7) {
+            S_c[My_id].data.shoots += 1;
+            shootss[My_id].setText(Integer.toString(S_c[My_id].data.shoots));
             cirs_create(My_id);
             for(int id = 1; id < P_n; id++)
             {
                 S_c[id].send(Integer.toString(My_id) + Integer.toString(3));
             }
         }
+    }
+
+    @FXML
+    protected void DBout() {
+        Thread thread = new Thread(() -> {
+            dao.printAll();
+        });
+        thread.start();
     }
 }

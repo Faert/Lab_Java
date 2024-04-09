@@ -23,6 +23,8 @@ public class ClientController {
     DataInputStream dis;
     DataOutputStream dos;
 
+    ScoreDAO dao;
+
     @FXML
     Pane P;
     @FXML
@@ -87,6 +89,9 @@ public class ClientController {
     @FXML
     Button Start;
 
+    @FXML
+    Button BDout;
+
     //Circle S_blue;
     Circle[] cirs = new Circle[4];
 
@@ -109,15 +114,15 @@ public class ClientController {
     Circle upd_remove(Circle cir, int id) {
         plate.getChildren().remove(cir);
         cir = null;
-        if (Sc_sh[id].sc >= 3) {
+        if (Sc_sh[id].getSc() >= 3) {
             //Stop();
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle(null);
             alert.setHeaderText(null);
             alert.setContentText(names[id].getText() + " WIN!!!");
             alert.showAndWait();
-        } else if (Sc_sh[id].sh == 7) {
-            Sc_sh[id].sh = 10;
+        } else if (Sc_sh[id].getSh() == 7) {
+            Sc_sh[id].setSh(10);
             //Pause();
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle(null);
@@ -160,15 +165,15 @@ public class ClientController {
                                 int sc_id = Integer.parseInt(msg.substring(0, 1));
                                 int ch_sc = Integer.parseInt(msg.substring(1, 2));
                                 if(ch_sc == 3) {
-                                    Sc_sh[sc_id].sh += 1;
+                                    Sc_sh[sc_id].setSh(Sc_sh[sc_id].getSh() + 1);
                                     Platform.runLater(() -> {
-                                        shootss[sc_id].setText(Integer.toString(Sc_sh[sc_id].sh));
+                                        shootss[sc_id].setText(Integer.toString(Sc_sh[sc_id].getSh()));
                                         cirs_create(sc_id);//!!cir
                                     });
                                 } else {
-                                    Sc_sh[sc_id].sc += ch_sc;
+                                    Sc_sh[sc_id].setSc(Sc_sh[sc_id].getSc() + ch_sc);
                                     Platform.runLater(() -> {
-                                        scores[sc_id].setText(Integer.toString(Sc_sh[sc_id].sc));
+                                        scores[sc_id].setText(Integer.toString(Sc_sh[sc_id].getSc()));
                                         cirs[sc_id] = upd_remove(cirs[sc_id], sc_id);//!!cir
                                     });
                                 }
@@ -300,6 +305,8 @@ public class ClientController {
                                 Sc_sh[id] = new MyPair();
                             }
 
+                            dao = new ScoreDAO();
+
                             read_sc.start();
                             st.start();
                         }).start();
@@ -350,10 +357,10 @@ public class ClientController {
                         plate.getChildren().remove(cirs[id_i]);
                         cirs[id_i] = null;
                     }
-                    Sc_sh[id_i].sc = 0;
-                    Sc_sh[id_i].sh = 0;
-                    scores[id_i].setText(Integer.toString(Sc_sh[id_i].sc));
-                    shootss[id_i].setText(Integer.toString(Sc_sh[id_i].sh));
+                    Sc_sh[id_i].setSc(0);
+                    Sc_sh[id_i].setSh(0);
+                    scores[id_i].setText(Integer.toString(Sc_sh[id_i].getSc()));
+                    shootss[id_i].setText(Integer.toString(Sc_sh[id_i].getSh()));
                 }
                 tg1p = 1;
                 tg2p = -1;
@@ -382,9 +389,9 @@ public class ClientController {
     @FXML
     protected void Shoot() {
         //System.out.println(S_blue);
-        if (flag && cirs[My_id] == null && Sc_sh[My_id].sh < 7) {
-            Sc_sh[My_id].sh += 1;
-            shootss[My_id].setText(Integer.toString(Sc_sh[My_id].sh));
+        if (flag && cirs[My_id] == null && Sc_sh[My_id].getSh() < 7) {
+            Sc_sh[My_id].setSh(Sc_sh[My_id].getSh() + 1);
+            shootss[My_id].setText(Integer.toString(Sc_sh[My_id].getSh()));
             cirs_create(My_id);
             try {//!!
                 dos.writeUTF("sh");
@@ -394,5 +401,9 @@ public class ClientController {
             }
 
         }
+    }
+    @FXML
+    protected void DBout() {
+        dao.printAll();
     }
 }

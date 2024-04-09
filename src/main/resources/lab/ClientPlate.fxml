@@ -16,6 +16,7 @@
                 <Button fx:id="Shoot" layoutX="370.0" layoutY="22.0" mnemonicParsing="false" onAction="#Shoot" text="Shoot" />
                 <Button fx:id="Pause" layoutX="218.0" layoutY="22.0" mnemonicParsing="false" onAction="#Pause" text="Pause" />
                 <Button fx:id="Ready" layoutX="89.0" layoutY="22.0" mnemonicParsing="false" onAction="#Ready" text="Ready" />
+                <Button fx:id="DBout" layoutX="520.0" layoutY="22.0" mnemonicParsing="false" onAction="#DBout" text="DBout" />
             </children>
         </Pane>
     </bottom>
@@ -23,10 +24,10 @@
         <Pane BorderPane.alignment="CENTER">
             <children>
                 <Region prefHeight="330.0" prefWidth="70.0" style="-fx-background-color: yellow; -fx-border-color: black;" />
-                <Polygon fx:id="tri" fill="DODGERBLUE" layoutX="35.0" layoutY="66.0" points="0.0, 30.599990844726562, 17.79998779296875, 0.1999969482421875, 0.0, -30.199996948242188" stroke="BLACK" strokeType="INSIDE" visible="false"/>
-                <Polygon fx:id="tri1" fill="#ff1f1f" layoutX="35.0" layoutY="132.0" points="0.0, 30.599990844726562, 17.79998779296875, 0.1999969482421875, 0.0, -30.199996948242188" stroke="BLACK" strokeType="INSIDE" visible="false"/>
-                <Polygon fx:id="tri2" fill="#1fff29" layoutX="35.0" layoutY="198.0" points="0.0, 30.599990844726562, 17.79998779296875, 0.1999969482421875, 0.0, -30.199996948242188" stroke="BLACK" strokeType="INSIDE" visible="false"/>
-                <Polygon fx:id="tri3" fill="#b81fff" layoutX="35.0" layoutY="264.0" points="0.0, 30.599990844726562, 17.79998779296875, 0.1999969482421875, 0.0, -30.199996948242188" stroke="BLACK" strokeType="INSIDE" visible="false"/>
+                <Polygon fx:id="tri" fill="DODGERBLUE" layoutX="35.0" layoutY="66.0" points="0.0, 30.599990844726562, 17.79998779296875, 0.1999969482421875, 0.0, -30.199996948242188" stroke="BLACK" strokeType="INSIDE" visible="false" />
+                <Polygon fx:id="tri1" fill="#ff1f1f" layoutX="35.0" layoutY="132.0" points="0.0, 30.599990844726562, 17.79998779296875, 0.1999969482421875, 0.0, -30.199996948242188" stroke="BLACK" strokeType="INSIDE" visible="false" />
+                <Polygon fx:id="tri2" fill="#1fff29" layoutX="35.0" layoutY="198.0" points="0.0, 30.599990844726562, 17.79998779296875, 0.1999969482421875, 0.0, -30.199996948242188" stroke="BLACK" strokeType="INSIDE" visible="false" />
+                <Polygon fx:id="tri3" fill="#b81fff" layoutX="35.0" layoutY="264.0" points="0.0, 30.599990844726562, 17.79998779296875, 0.1999969482421875, 0.0, -30.199996948242188" stroke="BLACK" strokeType="INSIDE" visible="false" />
             </children>
         </Pane>
     </left>

@@ -16,6 +16,7 @@
             <Button fx:id="Shoot" layoutX="370.0" layoutY="22.0" mnemonicParsing="false" onAction="#Shoot" text="Shoot" />
             <Button fx:id="Pause" layoutX="218.0" layoutY="22.0" mnemonicParsing="false" onAction="#Pause" text="Pause" />
             <Button fx:id="Ready" layoutX="89.0" layoutY="22.0" mnemonicParsing="false" onAction="#Ready" text="Ready" />
+            <Button fx:id="DBout" layoutX="512.0" layoutY="22.0" mnemonicParsing="false" onAction="#DBout" text="DBout" />
          </children>
       </Pane>
    </bottom>
