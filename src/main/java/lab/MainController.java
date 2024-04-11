@@ -1,14 +1,23 @@
 package lab;
 
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextInputDialog;
+import javafx.fxml.FXMLLoader;
+import javafx.geometry.Orientation;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.*;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.beans.value.ChangeListener;
 
+import javax.persistence.Column;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.ServerSocket;
@@ -95,6 +104,16 @@ public class MainController {
 
     @FXML
     Button DBout;
+
+    @FXML
+    TableColumn T_Name;
+    @FXML
+    TableColumn T_Score;
+    @FXML
+    TableColumn T_Shoots;
+    @FXML
+    TableColumn T_Win;
+
 
     //Circle S_blue;
     Circle[] cirs = new Circle[4];
@@ -195,10 +214,6 @@ public class MainController {
                                 plate.getChildren().remove(cirs[id]);
                                 cirs[id] = null;
                             }
-                            //Sc_sh[id].sc = 0;
-                            //Sc_sh[id].sh = 0;
-                            //scores[id].setText(Integer.toString(Sc_sh[id].sc));
-                            //shootss[id].setText(Integer.toString(Sc_sh[id].sh));
                             data.score = 0;
                             data.shoots = 0;
                             scores[id].setText(Integer.toString(data.score));
@@ -207,7 +222,6 @@ public class MainController {
                     });
                 id = -1;
                 P_act -= 1;
-                //cs.close();
             }
         }
 
@@ -259,6 +273,7 @@ public class MainController {
                 }
             }
         } else if (S_c[id].data.score >= 3) {
+            S_c[id].data.win += 1;
             Stop();
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle(null);
@@ -375,6 +390,15 @@ public class MainController {
                 S_c[id].send(names[id_i].getText());
             }
         }
+        for (int id = 1; id < P_n; id++) {
+            for (int i = 0; i < dao.data.size(); i++) {
+                S_c[id].send("Score");
+                S_c[id].send(dao.data.get(i).Name);
+                S_c[id].send(Integer.toString(dao.data.get(i).score));
+                S_c[id].send(Integer.toString(dao.data.get(i).shoots));
+                S_c[id].send(Integer.toString(dao.data.get(i).win));
+            }
+        }
 
         //st.start();
     }
@@ -398,14 +422,13 @@ public class MainController {
                     names[My_id].setText(name_str.length() <= 4 ? name_str : name_str.substring(0, 4));
 
                     dao = new ScoreDAO();
-/*
-                    for (int id = 0; id < 4; id++) {
-                        Sc_sh[id] = new MyPair();
-                    }
- */
+                    dao.getAll();
+
                     connect_s.start();
 
                     tg1p = 1;
+
+
                 } else if (ready == P_act){
                     try {
                         ss.close();
@@ -447,23 +470,24 @@ public class MainController {
             flag = false;
             flag_r = false;
             ready = 0;
-            /*
-            Thread tmp_t = new Thread(
-                () -> {
-                    for (int id_i = 0; id_i < P_n; id_i++) {
-                        dao.Sc_addOrUpdate(S_c[id_i].data);
-                    }
-            }).start();*/
+            //Thread tmp_t = new Thread(
+            //    () -> {
+            for (int id_i = 0; id_i < P_n; id_i++) {
+                dao.Sc_addOrUpdate(S_c[id_i].data);
+                if (id_i > 0) {
+                    S_c[id_i].send("st");
+                }
+            }
+            System.out.println(dao.data.getLast().toString());
+            //});
+            //tmp_t.start();
             Platform.runLater(() -> {
                 for (int id_i = 0; id_i < P_n; id_i++) {
-                    if (id_i > 0) {
-                        S_c[id_i].send("st");
-                    }
                     if (cirs[id_i] != null) {
                         plate.getChildren().remove(cirs[id_i]);
                         cirs[id_i] = null;
                     }
-                    dao.Sc_addOrUpdate(S_c[id_i].data);
+                    //dao.Sc_addOrUpdate(S_c[id_i].data);
                     names[id_i].setUnderline(false);
                     S_c[id_i].data.score = 0;
                     S_c[id_i].data.shoots = 0;
@@ -477,6 +501,18 @@ public class MainController {
                 target2.setLayoutX(line2.getLayoutX() + line2.getStartX());
                 target2.setLayoutY(tris[0].getLayoutY());
             });
+            System.out.println(dao.data.getLast().toString());
+            for (int i = 0; i < P_n; i++) {
+                int ind = dao.data.indexOf(S_c[i].data);
+                for (int id = 1; id < P_n; id++) {
+                    S_c[id].send("Sc_upd");
+                    S_c[id].send(dao.data.get(ind).Name);
+                    S_c[id].send(Integer.toString(dao.data.get(ind).score));
+                    S_c[id].send(Integer.toString(dao.data.get(ind).shoots));
+                    S_c[id].send(Integer.toString(dao.data.get(ind).win));
+                }
+            }
+            System.out.println(dao.data.getLast().toString());
         }
     }
 
@@ -510,9 +546,41 @@ public class MainController {
 
     @FXML
     protected void DBout() {
-        Thread thread = new Thread(() -> {
-            dao.printAll();
-        });
-        thread.start();
+        if (dao != null){
+            for (int id_i = 0; id_i < P_n; id_i++) {
+                dao.Sc_addOrUpdate(S_c[id_i].data);
+            }
+            System.out.println(dao.data.getLast().toString());
+            Platform.runLater(() -> {
+                Stage Table = new Stage(StageStyle.DECORATED);
+                Table.initModality(Modality.WINDOW_MODAL);
+
+                ObservableList<Score> tmp_sc = FXCollections.observableList(dao.data);
+                System.out.println(dao.data.getLast().toString());
+                TableView<Score> table = new TableView<Score>(tmp_sc);
+                table.setPrefWidth(250);
+                table.setPrefHeight(400);
+
+                TableColumn<Score, String> nameColumn = new TableColumn<Score, String>("Name");
+                nameColumn.setCellValueFactory(new PropertyValueFactory<Score, String>("Name"));
+                table.getColumns().add(nameColumn);
+                TableColumn<Score, Integer> ScoreColumn = new TableColumn<Score, Integer>("Score");
+                ScoreColumn.setCellValueFactory(new PropertyValueFactory<Score, Integer>("score"));
+                table.getColumns().add(ScoreColumn);
+                TableColumn<Score, Integer> ShootsColumn = new TableColumn<Score, Integer>("Shoots");
+                ShootsColumn.setCellValueFactory(new PropertyValueFactory<Score, Integer>("shoots"));
+                table.getColumns().add(ShootsColumn);
+                TableColumn<Score, Integer> WinColumn = new TableColumn<Score, Integer>("Win");
+                WinColumn.setCellValueFactory(new PropertyValueFactory<Score, Integer>("win"));
+                table.getColumns().add(WinColumn);
+                FlowPane root = new FlowPane(Orientation.VERTICAL, 10, 10, table);
+                Scene scene = new Scene(root, 250, 400);
+                Table.setScene(scene);
+                Table.setTitle("Score_Table");
+                Table.show();
+
+                dao.printAll();
+            });
+        }
     }
 }

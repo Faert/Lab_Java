@@ -2,12 +2,15 @@ package lab;
 
 import org.hibernate.*;
 
+import java.sql.Array;
 import java.util.List;
 
 public abstract class DAO_HB<T> {
     protected MySessionFactory mySessionFactory;
 
-    protected DAO_HB(Class<T> cl) {}
+    List<T> data;
+
+    protected DAO_HB(Class<T> cl) {};
 
     protected Session getCurrentSession() {
         return mySessionFactory.getSessionFactory().getCurrentSession();
@@ -25,7 +28,9 @@ public abstract class DAO_HB<T> {
         session.close();
     }
 
-    public List<T> getAll() {
-        return mySessionFactory.getSessionFactory().openSession().createQuery("From Score").list();
+    public void getAll() {
+        if(data == null){
+            data = mySessionFactory.getSessionFactory().openSession().createQuery("From Score").list();
+        }
     }
 }

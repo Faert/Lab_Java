@@ -1,17 +1,25 @@
 package lab;
 
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextInputDialog;
+import javafx.geometry.Orientation;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.*;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 
 import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ClientController {
     int port = 3124;
@@ -149,12 +157,31 @@ public class ClientController {
                         String msg = dis.readUTF();
                         System.out.println(msg);
                         switch (msg) {
+                            case "Score": {
+                                lab.Score tmp_sc = new Score(dis.readUTF(), Integer.parseInt(dis.readUTF()),
+                                        Integer.parseInt(dis.readUTF()));
+                                tmp_sc.win = Integer.parseInt(dis.readUTF());
+                                dao.data.add(tmp_sc);
+                                break;
+                            }
+                            case "Sc_upd": {
+                                lab.Score tmp_sc = new Score(dis.readUTF(), Integer.parseInt(dis.readUTF()),
+                                        Integer.parseInt(dis.readUTF()));
+                                tmp_sc.win = Integer.parseInt(dis.readUTF());
+                                int ind = dao.data.indexOf(tmp_sc);
+                                if(ind != -1) {
+                                    dao.data.set(ind, tmp_sc);
+                                } else {
+                                    dao.data.add(tmp_sc);
+                                }
+                                break;
+                            }
                             case "sta": {
                                 Start();
                                 break;
                             }
                             case  "st": {
-                                Stop();
+                                MyStop();
                                 break;
                             }
                             case "pa": {
@@ -306,6 +333,7 @@ public class ClientController {
                             }
 
                             dao = new ScoreDAO();
+                            dao.data = new ArrayList<lab.Score>();
 
                             read_sc.start();
                             st.start();
@@ -351,25 +379,30 @@ public class ClientController {
                 System.out.println("Server connect error");
                 System.exit(0);
             }
-            Platform.runLater(() -> {
-                for (int id_i = 0; id_i < P_n; id_i++) {
-                    if (cirs[id_i] != null) {
-                        plate.getChildren().remove(cirs[id_i]);
-                        cirs[id_i] = null;
-                    }
-                    Sc_sh[id_i].setSc(0);
-                    Sc_sh[id_i].setSh(0);
-                    scores[id_i].setText(Integer.toString(Sc_sh[id_i].getSc()));
-                    shootss[id_i].setText(Integer.toString(Sc_sh[id_i].getSh()));
-                }
-                tg1p = 1;
-                tg2p = -1;
-                target1.setLayoutX(line1.getLayoutX() + line1.getStartX());
-                target1.setLayoutY(tris[0].getLayoutY());
-                target2.setLayoutX(line2.getLayoutX() + line2.getStartX());
-                target2.setLayoutY(tris[0].getLayoutY());
-            });
+
         }
+    }
+
+    protected synchronized void MyStop() {
+        Platform.runLater(() -> {
+            for (int id_i = 0; id_i < P_n; id_i++) {
+                if (cirs[id_i] != null) {
+                    plate.getChildren().remove(cirs[id_i]);
+                    cirs[id_i] = null;
+                }
+
+                Sc_sh[id_i].setSc(0);
+                Sc_sh[id_i].setSh(0);
+                scores[id_i].setText(Integer.toString(Sc_sh[id_i].getSc()));
+                shootss[id_i].setText(Integer.toString(Sc_sh[id_i].getSh()));
+            }
+            tg1p = 1;
+            tg2p = -1;
+            target1.setLayoutX(line1.getLayoutX() + line1.getStartX());
+            target1.setLayoutY(tris[0].getLayoutY());
+            target2.setLayoutX(line2.getLayoutX() + line2.getStartX());
+            target2.setLayoutY(tris[0].getLayoutY());
+        });
     }
 
     @FXML
@@ -404,6 +437,35 @@ public class ClientController {
     }
     @FXML
     protected void DBout() {
-        dao.printAll();
+        if (dao != null){
+            Platform.runLater(() -> {
+
+                Stage Table = new Stage(StageStyle.DECORATED);
+                Table.initModality(Modality.WINDOW_MODAL);
+
+                ObservableList<Score> tmp_sc = FXCollections.observableList(dao.data);
+                TableView<Score> table = new TableView<Score>(tmp_sc);
+                table.setPrefWidth(250);
+                table.setPrefHeight(400);
+
+                TableColumn<Score, String> nameColumn = new TableColumn<Score, String>("Name");
+                nameColumn.setCellValueFactory(new PropertyValueFactory<Score, String>("Name"));
+                table.getColumns().add(nameColumn);
+                TableColumn<Score, Integer> ScoreColumn = new TableColumn<Score, Integer>("Score");
+                ScoreColumn.setCellValueFactory(new PropertyValueFactory<Score, Integer>("score"));
+                table.getColumns().add(ScoreColumn);
+                TableColumn<Score, Integer> ShootsColumn = new TableColumn<Score, Integer>("Shoots");
+                ShootsColumn.setCellValueFactory(new PropertyValueFactory<Score, Integer>("shoots"));
+                table.getColumns().add(ShootsColumn);
+                TableColumn<Score, Integer> WinColumn = new TableColumn<Score, Integer>("Win");
+                WinColumn.setCellValueFactory(new PropertyValueFactory<Score, Integer>("win"));
+                table.getColumns().add(WinColumn);
+                FlowPane root = new FlowPane(Orientation.VERTICAL, 10, 10, table);
+                Scene scene = new Scene(root, 250, 400);
+                Table.setScene(scene);
+                Table.setTitle("Score_Table");
+                Table.show();
+            });
+        }
     }
 }

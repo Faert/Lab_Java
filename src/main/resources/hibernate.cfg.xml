@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE hibernate-configuration SYSTEM
+        "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+
+<hibernate-configuration>
+    <session-factory>
+        <property name="show_sql">true</property>
+        <property name="format_sql">true</property>
+        <property name="dialect">org.sqlite.hibernate.dialect.SQLiteDialect</property>
+        <property name="connection.driver_class">org.sqlite.JDBC</property>
+        <property name="hibernate.connection.username" />
+        <property name="hibernate.connection.password" />
+        <!-- <property name="hibernate.packagesToScan">lab</property> -->
+        <property name="hibernate.connection.url">jdbc:sqlite:score.db</property>
+        <property name="hibernate.connection.autocommit">true</property>
+        <property name="hibernate.hbm2ddl.auto">update</property>
+        <!-- <property name="hibernate.jdbc.use_get_generated_keys">false</property> -->
+        <!-- <property name="spring.jpa-defer-datasource-initialization">true</property>-->
+
+    </session-factory>
+</hibernate-configuration>
