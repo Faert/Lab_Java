@@ -356,6 +356,13 @@ public class MainController {
                     for (int id_i = 0; id_i < P_n; id_i++) {
                         S_c[P_n].send(names[id_i].getText());
                     }
+                    for (int i = 0; i < dao.data.size(); i++) {
+                        S_c[P_n].send("Score");
+                        S_c[P_n].send(dao.data.get(i).Name);
+                        S_c[P_n].send(Integer.toString(dao.data.get(i).score));
+                        S_c[P_n].send(Integer.toString(dao.data.get(i).shoots));
+                        S_c[P_n].send(Integer.toString(dao.data.get(i).win));
+                    }
                     cirs[P_n] = null;
                     panes[P_n].setVisible(true);
                     tris[P_n].setVisible(true);
@@ -390,7 +397,7 @@ public class MainController {
                 S_c[id].send(names[id_i].getText());
             }
         }
-        for (int id = 1; id < P_n; id++) {
+        /*for (int id = 1; id < P_n; id++) {
             for (int i = 0; i < dao.data.size(); i++) {
                 S_c[id].send("Score");
                 S_c[id].send(dao.data.get(i).Name);
@@ -398,7 +405,7 @@ public class MainController {
                 S_c[id].send(Integer.toString(dao.data.get(i).shoots));
                 S_c[id].send(Integer.toString(dao.data.get(i).win));
             }
-        }
+        }*/
 
         //st.start();
     }
@@ -502,6 +509,7 @@ public class MainController {
                 target2.setLayoutY(tris[0].getLayoutY());
             });
             System.out.println(dao.data.getLast().toString());
+
             for (int i = 0; i < P_n; i++) {
                 int ind = dao.data.indexOf(S_c[i].data);
                 for (int id = 1; id < P_n; id++) {
@@ -547,16 +555,16 @@ public class MainController {
     @FXML
     protected void DBout() {
         if (dao != null){
-            for (int id_i = 0; id_i < P_n; id_i++) {
-                dao.Sc_addOrUpdate(S_c[id_i].data);
-            }
-            System.out.println(dao.data.getLast().toString());
+            //for (int id_i = 0; id_i < P_n; id_i++) {
+            //    dao.Sc_addOrUpdate(S_c[id_i].data);
+            //}
+            //System.out.println(dao.data.getLast().toString());
             Platform.runLater(() -> {
                 Stage Table = new Stage(StageStyle.DECORATED);
                 Table.initModality(Modality.WINDOW_MODAL);
 
                 ObservableList<Score> tmp_sc = FXCollections.observableList(dao.data);
-                System.out.println(dao.data.getLast().toString());
+                //System.out.println(dao.data.getLast().toString());
                 TableView<Score> table = new TableView<Score>(tmp_sc);
                 table.setPrefWidth(250);
                 table.setPrefHeight(400);

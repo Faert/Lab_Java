@@ -300,9 +300,20 @@ public class ClientController {
                         //System.out.println(names[My_id].getText());
                         dos.writeUTF(names[My_id].getText());
 
+                        dao = new ScoreDAO();
+                        dao.data = new ArrayList<lab.Score>();
+
                         new Thread(()->{
                             try {
-                                P_n = Integer.parseInt(dis.readUTF());
+                                String msg = dis.readUTF();
+                                while (msg.equals("Score")) {
+                                    lab.Score tmp_sc = new Score(dis.readUTF(), Integer.parseInt(dis.readUTF()),
+                                            Integer.parseInt(dis.readUTF()));
+                                    tmp_sc.win = Integer.parseInt(dis.readUTF());
+                                    dao.data.add(tmp_sc);
+                                    msg = dis.readUTF();
+                                }
+                                P_n = Integer.parseInt(msg);
                                 Platform.runLater(() -> {
                                     for (int id_i = My_id + 1; id_i < P_n; id_i++) {
                                         try {
@@ -332,8 +343,7 @@ public class ClientController {
                                 Sc_sh[id] = new MyPair();
                             }
 
-                            dao = new ScoreDAO();
-                            dao.data = new ArrayList<lab.Score>();
+
 
                             read_sc.start();
                             st.start();
@@ -385,6 +395,8 @@ public class ClientController {
 
     protected synchronized void MyStop() {
         Platform.runLater(() -> {
+            flag = false;
+            flag_r = false;
             for (int id_i = 0; id_i < P_n; id_i++) {
                 if (cirs[id_i] != null) {
                     plate.getChildren().remove(cirs[id_i]);
